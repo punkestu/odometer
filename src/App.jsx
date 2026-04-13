@@ -1,48 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useSpeed } from "./utils/position";
 import { AlwaysWake } from "./utils/screen";
 import { Analytic } from "./components/analytic";
-
-const WALKING_THRESHOLD = 0.2; // in kmh
-const RUNNING_THRESHOLD = 0.5; // in kmh
-const RIDING_THRESHOLD = 15; // in kmh
-
-function getStateFromSpeed(speed) {
-  if (speed > WALKING_THRESHOLD) {
-    return "Is Walking...";
-  } else if (speed > RUNNING_THRESHOLD) {
-    return "Is Running...";
-  } else if (speed > RIDING_THRESHOLD) {
-    return "Is Riding...";
-  }
-
-  return "Stopped...";
-}
+import { Spedometer } from "./components/spedometer";
 
 export default function App() {
   const [speed, _speedWindow, _motion, _motionscore] = useSpeed();
   const [analytic, setAnalytic] = useState(false);
-  const [speedDisplay, setSpeedDisplay] = useState(0);
-
-  useEffect(() => {
-    const intervalID = setInterval(() => {
-      setSpeedDisplay(speed);
-    }, 1000);
-    return () => {
-      clearInterval(intervalID);
-    };
-  }, []);
 
   return (
     <>
       <AlwaysWake />
-      <section className="p-4">
-        <h1 className="font-black text-9xl text-center">
-          {speedDisplay} <span className="text-xl">KM/h</span>
-        </h1>
-        <p className="text-center">{getStateFromSpeed(speedDisplay)}</p>
-      </section>
+      <Spedometer speed={speed} />
       <div className="flex justify-center">
         <label
           htmlFor="analytic"

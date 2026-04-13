@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Line, Bar } from "react-chartjs-2";
 import { MOTION_SCORE_THRESHOLD } from "../utils/position";
 
@@ -28,39 +28,40 @@ const GRAPH_LIMIT = 100;
 
 export function Analytic({ speedWindow, motionscore, motion, speed }) {
   const now = new Date();
-  const times = Array.from({ length: 100 }, (_, i) => {
-    return new Date(now + i * 1000).toLocaleTimeString();
-  });
   const [topSpeed, setTopSpeed] = useState(0);
+
+  const [times, setTimes] = useState(
+    // new Array(GRAPH_LIMIT).map((_, i) => {
+    //   return new Date(now + i * 1000).toLocaleTimeString()
+    // })
+    []
+  );
   const [speedMonitor, setSpeedMonitor] = useState(
-    times.map((value) => ({ time: value, value: 0 })),
+    // new Array(GRAPH_LIMIT).fill(0),
+    []
   );
   const [motionMonitor, setMotionMonitor] = useState(
-    times.map((value) => ({ time: value, value: 0 })),
+    // new Array(GRAPH_LIMIT).fill(0),
+    []
   );
-  useEffect(() => {
+  
+  useEffect(()=>{
     const intervalID = setInterval(() => {
-      const time = new Date().toLocaleTimeString();
-      setSpeedMonitor((prev) => [
-        ...prev.slice(-GRAPH_LIMIT + 1),
-        { time, value: speedWindow.at(-1) },
-      ]);
-      setMotionMonitor((prev) => [
-        ...prev.slice(-GRAPH_LIMIT + 1),
-        { time, value: motionscore.current },
-      ]);
+      setTimes([...times, new Date().toLocaleTimeString()].slice(-GRAPH_LIMIT));
+      setSpeedMonitor(prev => [...prev, speedWindow.at(-1)].slice(-GRAPH_LIMIT));
+      setMotionMonitor(prev => [...prev, motionscore.current].slice(-GRAPH_LIMIT));
     }, 1000);
     return () => {
       clearInterval(intervalID);
-    };
-  }, []);
+    }
+  }, [times]);
   useEffect(() => {
     setTopSpeed((prev) => Math.max(prev, speed));
   }, [speed]);
   return (
     <section className="p-4">
-      <p>Top Speed: {topSpeed.toFixed(2)} km/h</p>
-      <Bar
+      <p><span className="font-semibold">Top Speed:</span> {topSpeed.toFixed(2)} km/h</p>
+      <Line
         datasetIdKey="id"
         options={{
           scales: {
@@ -72,7 +73,7 @@ export function Analytic({ speedWindow, motionscore, motion, speed }) {
           },
         }}
         data={{
-          labels: speedMonitor.slice(-GRAPH_LIMIT).map((speed) => speed.time),
+          labels: times,
           datasets: [
             {
               id: 1,
@@ -80,18 +81,16 @@ export function Analytic({ speedWindow, motionscore, motion, speed }) {
               backgroundColor: "rgba(53, 162, 235, 0.5)",
               label: "Speed",
               data: speedMonitor
-                .slice(-GRAPH_LIMIT)
-                .map((speed) => speed.value),
+                .slice(-GRAPH_LIMIT),
             },
-            // {
-            //   id: 2,
-            //   borderColor: "rgb(255, 99, 132)",
-            //   backgroundColor: "rgba(255, 99, 132, 0.5)",
-            //   label: "Motion",
-            //   data: motionMonitor
-            //     .slice(-GRAPH_LIMIT)
-            //     .map((speed) => speed.value),
-            // },
+            {
+              id: 2,
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
+              label: "Motion",
+              data: motionMonitor
+                .slice(-GRAPH_LIMIT),
+            },
           ],
         }}
       />
@@ -101,7 +100,7 @@ export function Analytic({ speedWindow, motionscore, motion, speed }) {
             motionscore.current >= MOTION_SCORE_THRESHOLD ? "green" : "black",
         }}
       >
-        Motion: {motion.x.toFixed(2)}, {motion.y.toFixed(2)},{" "}
+        <span className="font-semibold">Motion:</span> {motion.x.toFixed(2)}, {motion.y.toFixed(2)},{" "}
         {motion.z.toFixed(2)}
       </p>
       <p
@@ -114,15 +113,15 @@ export function Analytic({ speedWindow, motionscore, motion, speed }) {
       </p>
       <div style={{ display: "flex" }}>
         <ul style={{ width: "50%" }}>
-          <li>Speed:</li>
-          {speedMonitor.slice(-10).map((speed, i) => {
-            return <li key={i}>{speed.value.toFixed(2)} km/h</li>;
+          <li className="font-semibold">Speed:</li>
+          {speedMonitor.slice(-GRAPH_LIMIT / 10).map((speed, i) => {
+            return <li key={i}>{speed.toFixed(2)} km/h</li>;
           })}
         </ul>
         <ul style={{ width: "50%" }}>
-          <li>Motion:</li>
-          {motionMonitor.slice(-10).map((motion, i) => {
-            return <li key={i}>{motion.value.toFixed(2)} km/h</li>;
+          <li className="font-semibold">Motion:</li>
+          {motionMonitor.slice(-GRAPH_LIMIT / 10).map((motion, i) => {
+            return <li key={i}>{motion.toFixed(2)} km/h</li>;
           })}
         </ul>
       </div>
