@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useSpeed } from "./utils/position";
 import { AlwaysWake } from "./utils/screen";
@@ -23,18 +23,31 @@ function getStateFromSpeed(speed) {
 export default function App() {
   const [speed, _speedWindow, _motion, _motionscore] = useSpeed();
   const [analytic, setAnalytic] = useState(false);
+  const [speedDisplay, setSpeedDisplay] = useState(0);
+
+  useEffect(() => {
+    const intervalID = setInterval(() => {
+      setSpeedDisplay(speed);
+    }, 1000);
+    return () => {
+      clearInterval(intervalID);
+    };
+  }, []);
 
   return (
     <>
       <AlwaysWake />
       <section className="p-4">
         <h1 className="font-black text-9xl text-center">
-          {speed} <span className="text-xl">KM/h</span>
+          {speedDisplay} <span className="text-xl">KM/h</span>
         </h1>
-        <p className="text-center">{getStateFromSpeed(speed)}</p>
+        <p className="text-center">{getStateFromSpeed(speedDisplay)}</p>
       </section>
       <div className="flex justify-center">
-        <label htmlFor="analytic" className="flex justify-center items-center gap-1">
+        <label
+          htmlFor="analytic"
+          className="flex justify-center items-center gap-1"
+        >
           <input
             type="checkbox"
             name="analytic"
@@ -49,6 +62,7 @@ export default function App() {
           speedWindow={_speedWindow}
           motionscore={_motionscore}
           motion={_motion}
+          speed={speed}
         />
       )}
     </>

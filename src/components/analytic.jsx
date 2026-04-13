@@ -4,12 +4,13 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
 import { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 import { MOTION_SCORE_THRESHOLD } from "../utils/position";
 
 ChartJS.register(
@@ -17,6 +18,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -24,11 +26,12 @@ ChartJS.register(
 
 const GRAPH_LIMIT = 100;
 
-export function Analytic({ speedWindow, motionscore, motion }) {
+export function Analytic({ speedWindow, motionscore, motion, speed }) {
   const now = new Date();
   const times = Array.from({ length: 100 }, (_, i) => {
     return new Date(now + i * 1000).toLocaleTimeString();
   });
+  const [topSpeed, setTopSpeed] = useState(0);
   const [speedMonitor, setSpeedMonitor] = useState(
     times.map((value) => ({ time: value, value: 0 })),
   );
@@ -51,9 +54,13 @@ export function Analytic({ speedWindow, motionscore, motion }) {
       clearInterval(intervalID);
     };
   }, []);
+  useEffect(() => {
+    setTopSpeed((prev) => Math.max(prev, speed));
+  }, [speed]);
   return (
     <section className="p-4">
-      <Line
+      <p>Top Speed: {topSpeed.toFixed(2)} km/h</p>
+      <Bar
         datasetIdKey="id"
         options={{
           scales: {
@@ -76,15 +83,15 @@ export function Analytic({ speedWindow, motionscore, motion }) {
                 .slice(-GRAPH_LIMIT)
                 .map((speed) => speed.value),
             },
-            {
-              id: 2,
-              borderColor: "rgb(255, 99, 132)",
-              backgroundColor: "rgba(255, 99, 132, 0.5)",
-              label: "Motion",
-              data: motionMonitor
-                .slice(-GRAPH_LIMIT)
-                .map((speed) => speed.value),
-            },
+            // {
+            //   id: 2,
+            //   borderColor: "rgb(255, 99, 132)",
+            //   backgroundColor: "rgba(255, 99, 132, 0.5)",
+            //   label: "Motion",
+            //   data: motionMonitor
+            //     .slice(-GRAPH_LIMIT)
+            //     .map((speed) => speed.value),
+            // },
           ],
         }}
       />
